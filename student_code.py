@@ -130,6 +130,39 @@ class KnowledgeBase(object):
         # Implementation goes here
         # Not required for the extra credit assignment
 
+    def kb_explain_rec(self, fact_or_rule, i):
+        indent = 4 * i * " "
+        ret_str = ""
+        if isinstance(fact_or_rule, Fact):
+            ret_str += indent + "fact: " + str(fact_or_rule.statement)
+            if fact_or_rule.asserted:
+                ret_str += " ASSERTED\n"
+                return ret_str
+            else:
+                ret_str += "\n"
+                for support_set in fact_or_rule.supported_by:
+                    ret_str += indent + "  SUPPORTED BY\n"
+                    for element in support_set:
+                        ret_str += self.kb_explain_rec(element, i + 1)
+                return ret_str
+        elif isinstance(fact_or_rule, Rule):
+            ret_str += indent + "rule: ("
+            # for s in fact_or_rule.lhs:
+            #     ret_str += str(s)
+            ret_str += ", ".join(list(map(str, fact_or_rule.lhs)))
+            ret_str +=  ') -> ' + str(fact_or_rule.rhs)
+            if fact_or_rule.asserted:
+                ret_str += " ASSERTED\n"
+                return ret_str
+            else:
+                ret_str += "\n"
+                for support_set in fact_or_rule.supported_by:
+                    ret_str += indent + "  SUPPORTED BY\n"
+                    for element in support_set:
+                        ret_str += self.kb_explain_rec(element, i + 1)
+                return ret_str
+
+
     def kb_explain(self, fact_or_rule):
         """
         Explain where the fact or rule comes from
@@ -142,6 +175,16 @@ class KnowledgeBase(object):
         """
         ####################################################
         # Student code goes here
+        if isinstance(fact_or_rule, Fact):
+            if fact_or_rule not in self.facts:
+                return "Fact is not in the KB"
+            else:
+                return self.kb_explain_rec(self.facts[self.facts.index(fact_or_rule)], 0)
+        elif isinstance(fact_or_rule, Rule):
+            if fact_or_rule not in self.rules:
+                return "Rule is not in the KB"
+            else:
+                return self.kb_explain_rec(self.rules[self.rules.index(fact_or_rule)], 0)
 
 
 class InferenceEngine(object):
@@ -154,7 +197,7 @@ class InferenceEngine(object):
             kb (KnowledgeBase) - A KnowledgeBase
 
         Returns:
-            Nothing            
+            Nothing
         """
         printv('Attempting to infer from {!r} and {!r} => {!r}', 1, verbose,
             [fact.statement, rule.lhs, rule.rhs])
